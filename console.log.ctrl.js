@@ -39,9 +39,19 @@ javascript:!function(b){!
 						lines.splice(act_line,1);
 						textarea.val( lines.join('\n') );
 						return;
-					} 
+					}
 					try{
-						result = eval.call(window,command);
+						if( /^l\s/.test(command) ){
+						command = command.replace(/^l\s/,'');
+							result = ( function(){
+								var text = '';
+								var obj = eval.call(window,command);
+								for(i in obj) text += (obj(i) + '\n');
+								return text;
+							}() );
+						}else{
+							result = eval.call(window,command);
+						}
 					}catch(e){
 						result = e;
 					}
