@@ -47,7 +47,7 @@ javascript:!function(b){!
 								var text = '';
 								var obj = eval.call(window,command);
 								if(obj && (typeof obj == 'object')){
-									for(i in obj) text += ( obj(i) + '\n< ' );
+									for(i in obj) text += ( obj[i] + '\n< ' );
 									return text;
 								} 
 								return obj;
@@ -58,7 +58,7 @@ javascript:!function(b){!
 								var text = '';
 								var obj = eval.call(window,command);
 								if(obj && (typeof obj == 'object')){
-									for(i in obj) text += ( arguments.callee(obj(i)) + '\n< ' );
+									for(i in obj) text += ( arguments.callee(obj[i])+ '\n< ' );
 									return text;
 								} 
 								return obj;
