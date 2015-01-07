@@ -42,13 +42,27 @@ javascript:!function(b){!
 					}
 					try{
 						if( /^l\s/.test(command) ){
-						command = command.replace(/^l\s/,'');
-							result = ( function(){
+							command = command.replace(/^l\s/,'');
+							result = ( function(command){
 								var text = '';
 								var obj = eval.call(window,command);
-								for(i in obj) text += (obj(i) + '\n');
-								return text;
-							}() );
+								if(obj && (typeof obj == 'object')){
+									for(i in obj) text += ( obj(i) + '\n< ' );
+									return text;
+								} 
+								return obj;
+							}(command) );
+						}else if(  /^la\s/.test(command) ){
+							command = command.replace(/^la\s/,'');
+							result = ( function(command){
+								var text = '';
+								var obj = eval.call(window,command);
+								if(obj && (typeof obj == 'object')){
+									for(i in obj) text += ( arguments.callee(obj(i)) + '\n< ' );
+									return text;
+								} 
+								return obj;
+							}(command) );
 						}else{
 							result = eval.call(window,command);
 						}
