@@ -11,7 +11,7 @@ javascript:!function(b){!
 				position: 'fixed',
 				top: '50px',
 				width: $(window).width(),
-				height: '200px',
+				height: '700px',
 				border: 0,
 				background: 'black',
 				color: 'white',
@@ -25,6 +25,7 @@ javascript:!function(b){!
 				var act_line = null;
 				var command = null;
 				var result = null;
+				var line_count,line_param,line_start,line_start;
 
 				if(event.keyCode == 13){
 					act_line = function(){
@@ -39,7 +40,20 @@ javascript:!function(b){!
 						lines.splice(act_line,1);
 						textarea.val( lines.join('\n') );
 						return;
+					}else if(command == 'c'){
+						textarea.val('> Yuan.Console.js was created by yuanoook.com \n> ');
+						return;
 					}
+
+					//计数参数设置，能够返回你指定范围内的数据
+					line_count = 0;
+					line_param = command.match( /\s(\d*)\s(\d*)$/ ) || [0,0,0];
+					line_start = parseInt( line_param[1] )-1;
+					line_stop = parseInt( line_param[2] ) || (command.match( /\s(\d*)$/g ) ? parseInt(command.match( /\s(\d*)$/g )[0]) : 0);
+					command = command.replace(/\s(\d*)\s(\d*)$|\s(\d*)$/,'');
+
+					console.log([line_count,line_start,line_stop,command]);
+
 					try{
 						if( /^l\s/.test(command) ){
 							command = command.replace(/^l\s/,'');
@@ -47,19 +61,27 @@ javascript:!function(b){!
 								var text = '';
 								var obj = eval.call(window,command);
 								if(obj && (typeof obj == 'object')){
-									for(i in obj) text += ( obj[i] + '\n< ' );
-									return text;
+									for(i in obj){
+										(!line_stop || (line_count >= line_start)) && ( text += (  i + ': ' + obj[i] + '\n< ' ) );
+										line_count++;
+										if(line_stop && line_count >= line_stop) return text.replace(/\n<\s$/,'');
+									}
+									return text.replace(/\n<\s$/,'');
 								} 
 								return obj;
 							}(command) );
-						}else if(  /^la\s/.test(command) ){
-							command = command.replace(/^la\s/,'');
+						}else if(  /^ls\s/.test(command) ){
+							command = command.replace(/^ls\s/,'');
 							result = ( function(command){
 								var text = '';
 								var obj = eval.call(window,command);
 								if(obj && (typeof obj == 'object')){
-									for(i in obj) text += ( arguments.callee(obj[i])+ '\n< ' );
-									return text;
+									for(i in obj){
+										(!line_stop || (line_count >= line_start)) && ( text += ( i + ': ' + arguments.callee(obj[i]) + '\n< ' ) );
+										line_count++;
+										if(line_stop && line_count >= line_stop) return text.replace(/\n<\s$/,'');
+									} 
+									return text.replace(/\n<\s$/,'');
 								} 
 								return obj;
 							}(command) );
