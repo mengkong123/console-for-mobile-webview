@@ -38,7 +38,7 @@ javascript:!function(b){!
 
 			textarea.big();
 
-			textarea.val( first_line ).appendTo($('body')).on('keyup',function(event) {
+			textarea.val( first_line ).appendTo($('body')).focus().on('keyup',function(event) {
 				if(event.keyCode != 13 && event.keyCode != 8) return;
 
 				var textarea_text = textarea.val();
