@@ -7,16 +7,38 @@ javascript:!function(b){!
 		console.log("正在加载：" + oScript.src);
 		Ajs.length && (oScript.onload = arguments.callee.bind(null, Ajs));
 		Ajs.length == 0 && (oScript.onload = function() {
-			$('<textarea>').css({
+			var textarea = $('<textarea id="yuan_mobile_console">');
+			var first_line = '> ------Created by yuanoook------ \n> ';
+
+			textarea.css({
 				position: 'fixed',
-				top: '50px',
-				width: $(window).width(),
-				height: '700px',
+				left: 0,
 				border: 0,
+				outline: 'none',
 				background: 'black',
 				color: 'white',
 				zIndex: 100000000000
-			}).html('> Yuan.Console.js was created by yuanoook.com \n> ').appendTo($('body')).on('keyup',function(event) {
+			});
+
+			textarea[0].big = function(){
+				textarea.css({
+					top: 0,
+					width: '100%',
+					height: '100%'
+				}).val( first_line );
+			};
+
+			textarea[0].small = function(){
+				textarea.css({
+					top: '40%',
+					width: '30%',
+					height: '50px'
+				}).val( '> ' );
+			};
+
+			textarea[0].big();
+
+			textarea.val( first_line ).appendTo($('body')).on('keyup',function(event) {
 				if(event.keyCode != 13 && event.keyCode != 8) return;
 
 				var textarea = $(this);
@@ -26,6 +48,7 @@ javascript:!function(b){!
 				var command = null;
 				var result = null;
 				var line_count,line_param,line_start,line_start;
+				var startTime = new Date();
 
 				if(event.keyCode == 13){
 					act_line = function(){
@@ -41,7 +64,13 @@ javascript:!function(b){!
 						textarea.val( lines.join('\n') );
 						return;
 					}else if(command == 'c'){
-						textarea.val('> Yuan.Console.js was created by yuanoook.com \n> ');
+						textarea.val( first_line );
+						return;
+					}else if(command == ';'){
+						textarea[0].small();
+						return;
+					}else if(command == ';;'){
+						textarea[0].big();
 						return;
 					}
 
@@ -52,7 +81,7 @@ javascript:!function(b){!
 					line_stop = parseInt( line_param[2] ) || (command.match( /\s(\d*)$/g ) ? parseInt(command.match( /\s(\d*)$/g )[0]) : 0);
 					command = command.replace(/\s(\d*)\s(\d*)$|\s(\d*)$/,'');
 
-					console.log([line_count,line_start,line_stop,command]);
+					// console.log([line_count,line_start,line_stop,command]);
 
 					try{
 						if( /^l\s/.test(command) ){
@@ -67,24 +96,39 @@ javascript:!function(b){!
 										if(line_stop && line_count >= line_stop) return text.replace(/\n<\s$/,'');
 									}
 									return text.replace(/\n<\s$/,'');
-								} 
+								}
 								return obj;
 							}(command) );
 						}else if(  /^ls\s/.test(command) ){
 							command = command.replace(/^ls\s/,'');
-							result = ( function(command){
+							result = ( function(command, context, parents){
+								var thisFunction = arguments.callee;
 								var text = '';
-								var obj = eval.call(window,command);
+								var obj = line_count==0 ? eval.call(context, command) : command;
+								var isVisited = false;
+								var fullname = '';
+
+								line_count == 0 && (thisFunction.historyArguments = []);
+								thisFunction.historyArguments.push(obj);
+
 								if(obj && (typeof obj == 'object')){
+									line_count !=0 && (text += '\n< ');
 									for(i in obj){
-										(!line_stop || (line_count >= line_start)) && ( text += ( i + ': ' + arguments.callee(obj[i]) + '\n< ' ) );
+
+										if (thisFunction.historyArguments.indexOf(obj[i]) != -1){
+ 											isVisited = true;
+										}
+
+										fullname =  (parents!=''?parents+'.':'') + i ;
+
+										(!line_stop || (line_count >= line_start)) && ( text += ( fullname + ': ' + ( isVisited ? obj[i] : thisFunction(obj[i], obj, fullname) ) + '\n< ' ) );
 										line_count++;
 										if(line_stop && line_count >= line_stop) return text.replace(/\n<\s$/,'');
 									} 
 									return text.replace(/\n<\s$/,'');
 								} 
 								return obj;
-							}(command) );
+							}(command, window, '') );
 						}else{
 							result = eval.call(window,command);
 						}
@@ -95,8 +139,8 @@ javascript:!function(b){!
 					lines[act_line-1] = lines[act_line-1] + lines[act_line];
 					lines.splice(act_line,1);
 					lines[lines.length-1] == '> ' && lines.splice(lines.length-1,1);
-
 					lines[lines.length] = '< ' + result;
+					lines[lines.length] = '< ---'+startTime.toTimeString().substring(0,8)+' --- Spend: '+(new Date()-startTime)+'ms --- '+new Date().toTimeString().substring(0,8);
 					lines[lines.length] = '> ';
 
 					textarea.val( lines.join('\n') );
