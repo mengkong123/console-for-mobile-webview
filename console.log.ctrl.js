@@ -8,7 +8,7 @@ javascript:!function(b){!
 		Ajs.length && (oScript.onload = arguments.callee.bind(null, Ajs));
 		Ajs.length == 0 && (oScript.onload = function() {
 			var textarea = $('<textarea id="yuan_mobile_console">');
-			var first_line = '> ------Created by yuanoook------ \n> ';
+			var first_line = '> ------ from Yuanoook.com ------ \n> ';
 
 			textarea.css({
 				position: 'fixed',
@@ -20,28 +20,27 @@ javascript:!function(b){!
 				zIndex: 100000000000
 			});
 
-			textarea[0].big = function(){
-				textarea.css({
+			textarea.big = function(){
+				return textarea.css({
 					top: 0,
 					width: '100%',
 					height: '100%'
-				}).val( first_line );
+				});
 			};
 
-			textarea[0].small = function(){
-				textarea.css({
+			textarea.small = function(){
+				return textarea.css({
 					top: '40%',
 					width: '30%',
 					height: '50px'
-				}).val( '> ' );
+				});
 			};
 
-			textarea[0].big();
+			textarea.big();
 
 			textarea.val( first_line ).appendTo($('body')).on('keyup',function(event) {
 				if(event.keyCode != 13 && event.keyCode != 8) return;
 
-				var textarea = $(this);
 				var textarea_text = textarea.val();
 				var lines = textarea_text.split(/\n/);
 				var act_line = null;
@@ -67,10 +66,10 @@ javascript:!function(b){!
 						textarea.val( first_line );
 						return;
 					}else if(command == ';'){
-						textarea[0].small();
+						textarea.small().val( textarea.val().replace(/;\n$/,'') );
 						return;
 					}else if(command == ';;'){
-						textarea[0].big();
+						textarea.big().val( textarea.val().replace(/;;\n$/,'') );
 						return;
 					}
 
@@ -140,7 +139,7 @@ javascript:!function(b){!
 					lines.splice(act_line,1);
 					lines[lines.length-1] == '> ' && lines.splice(lines.length-1,1);
 					lines[lines.length] = '< ' + result;
-					lines[lines.length] = '< ---'+startTime.toTimeString().substring(0,8)+' --- Spend: '+(new Date()-startTime)+'ms --- '+new Date().toTimeString().substring(0,8);
+					lines[lines.length] = '< ------ spend: '+(new Date()-startTime)+'ms ------';
 					lines[lines.length] = '> ';
 
 					textarea.val( lines.join('\n') );
