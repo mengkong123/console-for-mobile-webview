@@ -13,7 +13,7 @@
 
 ?0 表示0 个深度等级
 
-此时输出 window //返回 [window,object]
+此时输出 window //返回 [object Window]
 
 ?1 表示1 个深度等级
 
