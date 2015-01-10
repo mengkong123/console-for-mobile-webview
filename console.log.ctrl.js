@@ -8,6 +8,9 @@ javascript: ! function (b) {
         console.log("正在加载：" + oScript.src);
         Ajs.length && (oScript.onload = arguments.callee.bind(null, Ajs));
         Ajs.length == 0 && (oScript.onload = function () {
+            window.originalConsole = window.console;
+            window.console = {};
+
             var textarea = $('<textarea id="yuan_mobile_console">');
             var t = textarea[0];
             var first_line = '  ------ from Yuanoook.com ------ \n> ';
@@ -27,10 +30,10 @@ javascript: ! function (b) {
                 return textarea.val('> ');
             }
  
-            textarea.fix = function(){
+            textarea.fix = function () {
                 return textarea.val(t.value.replace(/\n$/, ''));
             }
-
+ 
             textarea.big = function () {
                 return textarea.css({
                     top: 0,
@@ -49,7 +52,7 @@ javascript: ! function (b) {
  
  
             textarea.init = function () {
-            	textarea.n = 1;
+                textarea.n = 1;
                 return textarea.css({
                     position: 'fixed',
                     left: 0,
@@ -64,9 +67,10 @@ javascript: ! function (b) {
  
             textarea.init().appendTo($('body')).focus().on('keyup', function (event) {
                 if (event.keyCode != 13 && event.keyCode != 8) return;
-
+ 
                 var command, result;
-                var n = textarea.n, line_count=0;
+                var n = textarea.n,
+                    line_count = 0;
                 var startTime = new Date();
  
                 if (event.keyCode == 13) {
@@ -77,7 +81,7 @@ javascript: ! function (b) {
                             return (subCommand ? subCommand[1] : '')
                         }()).replace(/^\s*|\s*$/g, '');
                     }();
-
+ 
                     if (command == '') {
                         textarea.fix();
                         return
@@ -93,10 +97,12 @@ javascript: ! function (b) {
                     } else if (command.replace(/;$/, '') == "clear()" && typeof clear == 'undefined') {
                         textarea.clear();
                         return
-                    } else if ( /^\?/.test(command) ){
-                    	textarea.n = Math.abs(parseInt(command.replace(/^\?/,''))) || 1;
-                    	textarea.val( t.value.replace(/>.*\n$/, '> ') );
-                    	return
+                    } else if (/^\?/.test(command)) {
+                        n = Math.abs(parseInt(command.replace(/^\?/, '')));
+                        textarea.n = n == 0 ? 0 : (n ? n : 1);
+                        textarea.val(t.value.replace(/\n$/, '\n> '));
+                        console.log('------ export deepness: ' + textarea.n + ' -----');
+                        return
                     }
  
                     result = function (command, context, parents, n) {
@@ -105,7 +111,7 @@ javascript: ! function (b) {
                         var obj = null;
                         var isVisited = false;
                         var fullname = '';
-
+ 
                         try {
                             obj = line_count == 0 ? eval.call(context, command) : command;
                         } catch (e) {
@@ -117,52 +123,52 @@ javascript: ! function (b) {
  
                         if (typeof obj == 'string') return '\"' + obj + '\"';
                         if (typeof obj != 'object') return obj;
-
+ 
                         if (obj && isArray(obj)) {
-                            text = '[' + function(){
-                            	if(obj.length >=2){
-                            		return obj.reduce(function(preVal, curVal){
-                            			return function(){
-                            				if(typeof preVal == 'string') return '\"' + preVal + '\"';
-                            				if(typeof preVal != 'object') return preVal;
-                            				return thisFunction(preVal, obj, '', 0)
-                            			}() + ',' + function(){
-                            				if(typeof curVal == 'string') return '\"' + curVal + '\"';
-                            				if(typeof curVal != 'object') return curVal;
-                            				return thisFunction(curVal, obj, '', 0)
-                            			}()
-                            		});
-                            	}else if(obj.length == 1){
-                            		return thisFunction( obj[0], obj, '', 0)
-                            	}else{
-                            		return ''
-                            	}
+                            text = '[' + function () {
+                                if (obj.length >= 2) {
+                                    return obj.reduce(function (preVal, curVal) {
+                                        return function () {
+                                            if (typeof preVal == 'string') return '\"' + preVal + '\"';
+                                            if (typeof preVal != 'object') return preVal;
+                                            return thisFunction(preVal, obj, '', 0)
+                                        }() + ',' + function () {
+                                            if (typeof curVal == 'string') return '\"' + curVal + '\"';
+                                            if (typeof curVal != 'object') return curVal;
+                                            return thisFunction(curVal, obj, '', 0)
+                                        }()
+                                    });
+                                } else if (obj.length == 1) {
+                                    return thisFunction(obj[0], obj, '', 0)
+                                } else {
+                                    return ''
+                                }
                             }() + ']';
-                        	line_count++;
+                            line_count++;
                             return text
                         }
-                        
+ 
                         if (obj && (typeof obj == 'object')) {
                             for (i in obj) {
                                 isVisited = thisFunction.historyArguments.indexOf(obj[i]) != -1;
                                 fullname = (parents != '' ? parents + '.' : '') + i;
-
-								text += (fullname + ': ' + function(){
-									if(typeof obj[i] == 'string') return '\"' + obj[i] + '\"';
-									if(typeof obj[i] != 'object') return obj[i];
-									if(n <= 1) return obj[i];
-									if(isVisited) return obj[i];
-									return '\n'+thisFunction(obj[i], obj, fullname, n-1)
-								}() + '\n');
-
+ 
+                                text += (fullname + ': ' + function () {
+                                    if (typeof obj[i] == 'string') return '\"' + obj[i] + '\"';
+                                    if (typeof obj[i] != 'object') return obj[i];
+                                    if (n <= 1) return obj[i];
+                                    if (isVisited) return obj[i];
+                                    return '\n' + thisFunction(obj[i], obj, fullname, n - 1)
+                                }() + '\n');
+ 
                                 line_count++;
                             }
                             return text
                         }
                     }(command, window, '', n);
-
-                   	if(typeof result == 'string') result = result.replace(/\n*$/,'').replace(/\n/g,'\n  ');
-
+ 
+                    if (typeof result == 'string') result = result.replace(/\n*$/, '').replace(/\n/g, '\n  ');
+ 
                     textarea.write({
                         'msg': result,
                         'islog': false
@@ -174,32 +180,25 @@ javascript: ! function (b) {
                 }
  
             });
- 
-            window.console.log = function () {
-                if (!window.navigator.userAgent.match(/Mobile/)) {
-                    return function (msg) {
-                        if (arguments.length != 0) textarea.write({
-                                'msg': msg,
-                                'islog': true
-                            });
-                    }
-                }
-                return window.console.log;
-            }();
- 
+
+            window.console.log = function (msg) {
+                if (arguments.length == 0) return;
+                textarea.write({
+                    'msg': msg,
+                    'islog': true
+                });
+                originalConsole.log(msg);
+            };
+
             window.console.clear = function () {
-                if (!window.navigator.userAgent.match(/Mobile/)) {
-                    return function () {
-                        textarea.clear();
-                        textarea.write({
-                            'msg': 'Console was cleared',
-                            'islog': true
-                        });
-                    }
-                }
-                return window.console.clear;
-            }();
- 
+                textarea.clear();
+                textarea.write({
+                    'msg': 'Console was cleared',
+                    'islog': true
+                });
+                originalConsole.clear();
+            };
+
             function isArray(obj) {
                 return Object.prototype.toString.call(obj) === '[object Array]';
             }
