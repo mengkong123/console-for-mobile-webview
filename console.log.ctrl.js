@@ -129,7 +129,6 @@ javascript: ! function (b) {
                                 if (obj.length >= 2) {
                                     return obj.reduce(function (preVal, curVal) {
                                         return function () {
-                                            if (typeof preVal == 'string') return '\"' + preVal + '\"';
                                             if (typeof preVal != 'object') return preVal;
                                             return thisFunction(preVal, obj, '', 0)
                                         }() + ',' + function () {
@@ -149,6 +148,7 @@ javascript: ! function (b) {
                         }
  
                         if (obj && (typeof obj == 'object')) {
+                            if(n<=0) return obj;
                             for (i in obj) {
                                 isVisited = thisFunction.historyArguments.indexOf(obj[i]) != -1;
                                 fullname = (parents != '' ? parents + '.' : '') + i;
