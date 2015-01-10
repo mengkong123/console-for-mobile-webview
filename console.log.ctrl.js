@@ -1,167 +1,208 @@
-javascript:!function(b){!
-	function(Ajs) {
-		var oScript = document.createElement("script");
-		oScript.src = Ajs.shift();
-		oScript.charset = 'utf-8';
-		b.appendChild(oScript);
-		console.log("正在加载：" + oScript.src);
-		Ajs.length && (oScript.onload = arguments.callee.bind(null, Ajs));
-		Ajs.length == 0 && (oScript.onload = function() {
-			var textarea = $('<textarea id="yuan_mobile_console">');
-			var first_line = '> ------ from Yuanoook.com ------ \n> ';
+javascript: ! function (b) {
+    ! function (Ajs) {
+        // if window
+        var oScript = document.createElement("script");
+        oScript.src = Ajs.shift();
+        oScript.charset = 'utf-8';
+        b.appendChild(oScript);
+        console.log("正在加载：" + oScript.src);
+        Ajs.length && (oScript.onload = arguments.callee.bind(null, Ajs));
+        Ajs.length == 0 && (oScript.onload = function () {
+            var textarea = $('<textarea id="yuan_mobile_console">');
+            var t = textarea[0];
+            var first_line = '  ------ from Yuanoook.com ------ \n> ';
+ 
+            textarea.write = function (params) {
+                return textarea.val(function () {
+                    if (t.value.length == t.selectionEnd) return t.value;
+                    return t.value.substring(0, t.selectionStart).replace(/\n$/, '') + t.value.substring(t.selectionStart)
+                }().replace(/\n>\s$|\n$|$/, (params.islog ? '\n  ' : '\n< ')) + params.msg + '\n> ')
+            }
+ 
+            textarea.clear = function () {
+                return textarea.val(first_line)
+            }
+ 
+            textarea.absClear = function () {
+                return textarea.val('> ');
+            }
+ 
+            textarea.fix = function(){
+                return textarea.val(t.value.replace(/\n$/, ''));
+            }
 
-			textarea.css({
-				position: 'fixed',
-				left: 0,
-				border: 0,
-				outline: 'none',
-				background: 'black',
-				color: 'white',
-				zIndex: 100000000000
-			});
+            textarea.big = function () {
+                return textarea.css({
+                    top: 0,
+                    width: '100%',
+                    height: '100%'
+                });
+            };
+ 
+            textarea.small = function () {
+                return textarea.css({
+                    top: '40%',
+                    width: '30%',
+                    height: '50px'
+                });
+            };
+ 
+ 
+            textarea.init = function () {
+            	textarea.n = 1;
+                return textarea.css({
+                    position: 'fixed',
+                    left: 0,
+                    border: 0,
+                    outline: 'none',
+                    background: 'black',
+                    color: 'white',
+                    fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,Microsoft Yahei,monospace',
+                    zIndex: 100000000000
+                }).big().clear();
+            }
+ 
+            textarea.init().appendTo($('body')).focus().on('keyup', function (event) {
+                if (event.keyCode != 13 && event.keyCode != 8) return;
 
-			textarea.big = function(){
-				return textarea.css({
-					top: 0,
-					width: '100%',
-					height: '100%'
-				});
-			};
+                var command, result;
+                var n = textarea.n, line_count=0;
+                var startTime = new Date();
+ 
+                if (event.keyCode == 13) {
+ 
+                    command = function () {
+                        return (t.value.substring(0, t.selectionStart).match(/>\s([^\n]*?)\n$/)[1] + function () {
+                            var subCommand = t.value.substring(t.selectionStart).match(/^(.*)/);
+                            return (subCommand ? subCommand[1] : '')
+                        }()).replace(/^\s*|\s*$/g, '');
+                    }();
 
-			textarea.small = function(){
-				return textarea.css({
-					top: '40%',
-					width: '30%',
-					height: '50px'
-				});
-			};
+                    if (command == '') {
+                        textarea.fix();
+                        return
+                    } else if (command == ',') {
+                        textarea.clear();
+                        return
+                    } else if (command == ';') {
+                        textarea.small().val(t.value.replace(/;\n$/, ''));
+                        return
+                    } else if (command == ';;') {
+                        textarea.big().val(t.value.replace(/;;\n$/, ''));
+                        return
+                    } else if (command.replace(/;$/, '') == "clear()" && typeof clear == 'undefined') {
+                        textarea.clear();
+                        return
+                    } else if ( /^\?/.test(command) ){
+                    	textarea.n = Math.abs(parseInt(command.replace(/^\?/,''))) || 1;
+                    	textarea.val( t.value.replace(/>.*\n$/, '> ') );
+                    	return
+                    }
+ 
+                    result = function (command, context, parents, n) {
+                        var thisFunction = arguments.callee;
+                        var text = '';
+                        var obj = null;
+                        var isVisited = false;
+                        var fullname = '';
 
-			textarea.big();
+                        try {
+                            obj = line_count == 0 ? eval.call(context, command) : command;
+                        } catch (e) {
+                            return e;
+                        }
+ 
+                        line_count == 0 && (thisFunction.historyArguments = []);
+                        thisFunction.historyArguments.push(obj);
+ 
+                        if (typeof obj == 'string') return '\"' + obj + '\"';
+                        if (typeof obj != 'object') return obj;
 
-			textarea.val( first_line ).appendTo($('body')).focus().on('keyup',function(event) {
-				if(event.keyCode != 13 && event.keyCode != 8) return;
+                        if (obj && isArray(obj)) {
+                            text = '[' + function(){
+                            	if(obj.length >=2){
+                            		return obj.reduce(function(preVal, curVal){
+                            			return function(){
+                            				if(typeof preVal == 'string') return '\"' + preVal + '\"';
+                            				if(typeof preVal != 'object') return preVal;
+                            				return thisFunction(preVal, obj, '', 0)
+                            			}() + ',' + function(){
+                            				if(typeof curVal == 'string') return '\"' + curVal + '\"';
+                            				if(typeof curVal != 'object') return curVal;
+                            				return thisFunction(curVal, obj, '', 0)
+                            			}()
+                            		});
+                            	}else if(obj.length == 1){
+                            		return thisFunction( obj[0], obj, '', 0)
+                            	}else{
+                            		return ''
+                            	}
+                            }() + ']';
+                        	line_count++;
+                            return text
+                        }
+                        
+                        if (obj && (typeof obj == 'object')) {
+                            for (i in obj) {
+                                isVisited = thisFunction.historyArguments.indexOf(obj[i]) != -1;
+                                fullname = (parents != '' ? parents + '.' : '') + i;
 
-				var textarea_text = textarea.val();
-				var lines = textarea_text.split(/\n/);
-				var act_line = null;
-				var command = null;
-				var result = null;
-				var line_count,line_param,line_start,line_start;
-				var startTime = new Date();
+								text += (fullname + ': ' + function(){
+									if(typeof obj[i] == 'string') return '\"' + obj[i] + '\"';
+									if(typeof obj[i] != 'object') return obj[i];
+									if(n <= 1) return obj[i];
+									if(isVisited) return obj[i];
+									return '\n'+thisFunction(obj[i], obj, fullname, n-1)
+								}() + '\n');
 
-				if(event.keyCode == 13){
-					act_line = function(){
-						var i = lines.length;
-						while(i-- > 0){
-							if( !/^>\s|^<\s/.test(lines[i]) ) return i;
-						}
-					}();
+                                line_count++;
+                            }
+                            return text
+                        }
+                    }(command, window, '', n);
 
-					command = lines[act_line-1].replace(/^>\s|<\s/,'') + lines[act_line];
-					if(command == ''){
-						lines.splice(act_line,1);
-						textarea.val( lines.join('\n') );
-						return;
-					}else if(command == 'c'){
-						textarea.val( first_line );
-						return;
-					}else if(command == ';'){
-						textarea.small().val( textarea.val().replace(/;\n$/,'') );
-						return;
-					}else if(command == ';;'){
-						textarea.big().val( textarea.val().replace(/;;\n$/,'') );
-						return;
-					}
+                   	if(typeof result == 'string') result = result.replace(/\n*$/,'').replace(/\n/g,'\n  ');
 
-					//计数参数设置，能够返回你指定范围内的数据
-					line_count = 0;
-					line_param = command.match( /\s(\d*)\s(\d*)$/ ) || [0,0,0];
-					line_start = parseInt( line_param[1] )-1;
-					line_stop = parseInt( line_param[2] ) || (command.match( /\s(\d*)$/g ) ? parseInt(command.match( /\s(\d*)$/g )[0]) : 0);
-					command = command.replace(/\s(\d*)\s(\d*)$|\s(\d*)$/,'');
-
-					// console.log([line_count,line_start,line_stop,command]);
-
-					try{
-						if( /^l\s/.test(command) ){
-							command = command.replace(/^l\s/,'');
-							result = ( function(command){
-								var text = '';
-								var obj = eval.call(window,command);
-								if(obj && (typeof obj == 'object')){
-									for(i in obj){
-										(!line_stop || (line_count >= line_start)) && ( text += (  i + ': ' + obj[i] + '\n< ' ) );
-										line_count++;
-										if(line_stop && line_count >= line_stop) return text.replace(/\n<\s$/,'');
-									}
-									return text.replace(/\n<\s$/,'');
-								}
-								return obj;
-							}(command) );
-						}else if(  /^ls\s/.test(command) ){
-							command = command.replace(/^ls\s/,'');
-							result = ( function(command, context, parents){
-								var thisFunction = arguments.callee;
-								var text = '';
-								var obj = line_count==0 ? eval.call(context, command) : command;
-								var isVisited = false;
-								var fullname = '';
-
-								line_count == 0 && (thisFunction.historyArguments = []);
-								thisFunction.historyArguments.push(obj);
-
-								if(obj && (typeof obj == 'object')){
-									line_count !=0 && (text += '\n< ');
-									for(i in obj){
-
-										if (thisFunction.historyArguments.indexOf(obj[i]) != -1){
- 											isVisited = true;
-										}
-
-										fullname =  (parents!=''?parents+'.':'') + i ;
-
-										(!line_stop || (line_count >= line_start)) && ( text += ( fullname + ': ' + ( isVisited ? obj[i] : thisFunction(obj[i], obj, fullname) ) + '\n< ' ) );
-										line_count++;
-										if(line_stop && line_count >= line_stop) return text.replace(/\n<\s$/,'');
-									} 
-									return text.replace(/\n<\s$/,'');
-								} 
-								return obj;
-							}(command, window, '') );
-						}else{
-							result = eval.call(window,command);
-						}
-					}catch(e){
-						result = e;
-					}
-
-					lines[act_line-1] = lines[act_line-1] + lines[act_line];
-					lines.splice(act_line,1);
-					lines[lines.length-1] == '> ' && lines.splice(lines.length-1,1);
-					lines[lines.length] = '< ' + result;
-					lines[lines.length] = '< ------ spend: '+(new Date()-startTime)+'ms ------';
-					lines[lines.length] = '> ';
-
-					textarea.val( lines.join('\n') );
-
-					textarea.scrollTop( this.scrollHeight );
-				}else if(event.keyCode == 8){
-					act_line = function(){
-						var i = lines.length;
-						while(i-- > 0){
-							if( /^>$|^<$/.test(lines[i]) ) return i;
-						}
-						return -1;
-					}();
-
-					if( act_line == -1 ) return;
-					
-					lines[act_line] = lines[act_line].replace(/^>$/,'> ');
-					lines[act_line] = lines[act_line].replace(/^<$/,'< ');
-					textarea.val( lines.join('\n') );
-				}
-
-			});
-		});
-	} (["http://www.yuanoook.com/cdn/bootstrap/jquery.min.js"]);
-} (document.body || document.querySelector('body'));
+                    textarea.write({
+                        'msg': result,
+                        'islog': false
+                    });
+ 
+                    textarea.scrollTop(this.scrollHeight);
+                } else if (event.keyCode == 8) {
+ 
+                }
+ 
+            });
+ 
+            window.console.log = function () {
+                if (!window.navigator.userAgent.match(/Mobile/)) {
+                    return function (msg) {
+                        if (arguments.length != 0) textarea.write({
+                                'msg': msg,
+                                'islog': true
+                            });
+                    }
+                }
+                return window.console.log;
+            }();
+ 
+            window.console.clear = function () {
+                if (!window.navigator.userAgent.match(/Mobile/)) {
+                    return function () {
+                        textarea.clear();
+                        textarea.write({
+                            'msg': 'Console was cleared',
+                            'islog': true
+                        });
+                    }
+                }
+                return window.console.clear;
+            }();
+ 
+            function isArray(obj) {
+                return Object.prototype.toString.call(obj) === '[object Array]';
+            }
+        });
+    }(["http://www.yuanoook.com/cdn/bootstrap/jquery.min.js"]);
+}(document.body || document.querySelector('body'));
