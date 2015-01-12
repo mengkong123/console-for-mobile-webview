@@ -7,7 +7,7 @@ javascript: ! function () {
     }
  
     var var_dump = function (command, context, parents, n) {
-        if(!command || command.length == 0) return;
+        if(!command || (typeof command == 'string' && command.length == 0)) return;
         var context = context || window;
         var parents = parents || '';
         var n = (n==0?0:n) || 1;
@@ -290,7 +290,7 @@ javascript: ! function () {
     window.console.log = function (msg) {
         if (arguments.length == 0) return;
         textarea.write({
-            'msg': msg,
+            'msg': typeof msg == 'string' ? msg : var_dump(msg).replace(/\n([^\s])/g,'\n  $1'),
             'islog': true
         });
         originalConsole.log(msg);
