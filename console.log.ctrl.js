@@ -168,8 +168,8 @@ javascript: ! function () {
  
     textarea.burger = function () {
         textarea.css({
-            top: '30%',
-            height: '30%'
+            top: '33%',
+            height: '33%'
         });
         if (arguments.length == 1) {
             textarea.css({
@@ -215,10 +215,10 @@ javascript: ! function () {
             color: 'white',
             fontFamily: 'Consolas,Liberation Mono,Menlo,Courier,Microsoft Yahei,monospace',
             zIndex: 100000000000
-        }).burger().clear().ready();
+        }).burger().clear().appendTo($('body')).ready();
     }
  
-    textarea.init().on('keyup', function (event) {
+    textarea.on('keyup', function (event) {
         if (event.keyCode != 13 && event.keyCode != 8) return;
  
         var command, result;
@@ -290,7 +290,11 @@ javascript: ! function () {
     window.console.log = function (msg) {
         if (arguments.length == 0) return;
         textarea.write({
-            'msg': typeof msg == 'string' ? msg : var_dump(msg).replace(/\n([^\s])/g,'\n  $1'),
+            'msg': function(){
+                if(typeof msg == 'string') return msg;
+                else msg = var_dump(msg);
+                return typeof msg == 'string' ? msg.replace(/\n([^\s])/g,'\n  $1') : msg
+            }(),
             'islog': true
         });
         originalConsole.log(msg);
@@ -323,14 +327,13 @@ javascript: ! function () {
         $('body').appendChild(script)
     }
  
-    document.addEventListener('readystatechange', function () {
+    if(document.readyState=='complete') textarea.init();
+    else document.addEventListener('readystatechange', function () {
         if (document.readyState != 'complete') return;
-        textarea.appendTo($('body')).init();
-    })
+        textarea.init()
+    });
  
-    window.addEventListener('resize', function () {
-        textarea.ready()
-    })
+    window.addEventListener('resize',textarea.ready);
  
     window.addEventListener('error', function (e) {
         console.log( e );
