@@ -1,3 +1,6 @@
+# the project is unmaintained 
+# Please use https://github.com/liriliri/eruda to debug mobile web APP
+
 # console-for-mobile-webview
 手机浏览器怎么实现调试 ？
 
